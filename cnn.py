@@ -1,23 +1,3 @@
-# cnn.py —— 实验一·高级要求：ORL 人脸数据集上的 CNN
-# 功能：
-#   1) 训练过程：在 ORL 固定训练集（每类前 5 张，共 200 张）上训练 CNN
-#   2) 原数据集测试：CNN → 原始测试集（每类后 5 张，共 200 张），输出 ACC / NMI / CEN
-#   3) 数据增强：四个方向旋转（左上45°、左下135°、右下225°、右上315°），训练集扩为 5 倍
-#   4) 新数据集测试：增强训练集训练的 CNN → 原始测试集；并对旋转后的测试集做鲁棒性对比
-#   5) 对比测试：内嵌与 knn-weka.py 完全相同的 kNN（同划分、同 k、同距离/投票、同指标实现）
-#
-# 路径接口 / NMI / CEN 与 knn-weka.py 一致；数据划分与 knn_split.py（改造版）一致，
-# 划分索引落盘 orl_split.npz，两脚本互相校验。
-#
-# 依赖: pip install torch numpy pillow
-# 用法:
-#   python cnn.py                          # 完整流程
-#   python cnn.py --no-knn                 # 只跑 CNN
-#   python cnn.py --no-robust              # 跳过旋转测试集鲁棒性实验
-#   python cnn.py --epochs-orig 80 --epochs-aug 50
-#   python cnn.py --angles 45 135          # 仅“左上、左下”（高级要求最低配置）
-#   python cnn.py --angles 15 -15 30 -30   # 小角度版本
-
 import os, math, sys, csv, argparse, glob
 import numpy as np
 from PIL import Image
@@ -25,51 +5,40 @@ import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 
-# ============ 配置区（路径/规模与 knn-weka.py 保持一致） ============
 DATA_DIR     = "./att_faces"          # s1..s40, 每个文件夹 1.pgm..10.pgm
-IMG_H, IMG_W = 112, 92                # ORL 原始尺寸 → N_FEATURES = 10304
+IMG_H, IMG_W = 112, 92                
 N_CLASSES    = 40
 N_FEATURES   = IMG_H * IMG_W
 
 TRAIN_PER_CLASS = 5                   # 每类训练张数 → 200 训练 / 200 测试
-K_LIST          = [5, 7, 9, 11, 13]   # 与 knn-weka.py 相同
+K_LIST          = [5, 7, 9, 11, 13]   
 SEED            = 1
 
 BATCH_ORIG, BATCH_AUG   = 32, 32
 EPOCHS_ORIG, EPOCHS_AUG = 80, 200      # 原始集 200 张 / 增强集 5×200=1000 张
 LR, WEIGHT_DECAY        = 1e-3, 5e-4
-LABEL_SMOOTH            = 0.1         # 需 torch >= 1.10
+LABEL_SMOOTH            = 0.1         
 
-ROT_ANGLES = (45, 135, 225, 315)      # 左上 / 左下 / 右下 / 右上（PIL 正角度=逆时针）
+ROT_ANGLES = (45, 135, 225, 315)      # 左上 / 左下 / 右下 / 右上
 ANGLE_NAME = {0: "原始(0°)", 45: "左上(45°)", 135: "左下(135°)",
               225: "右下(225°)", 315: "右上(315°)"}
 DEVICE     = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 RESAMPLE   = getattr(Image, "Resampling", Image).BILINEAR
 SPLIT_FILE = "orl_split.npz"
 
-# ---------------- 数据加载（与 knn-weka.py 完全一致） ----------------
 def load_data(data_dir=DATA_DIR):
-    """遍历 s{1..40}/{1..10}.pgm，展平 + 归一化到 [0,1]。标签: s1→0 ... s40→39"""
-    if not os.path.isdir(data_dir):
-        raise SystemExit(f"找不到数据目录: {data_dir}\n当前工作目录: {os.getcwd()}")
     X, y = [], []
     for i in range(1, N_CLASSES + 1):
         d = os.path.join(data_dir, f"s{i}")
         files = sorted(glob.glob(os.path.join(d, "*.pgm")),
                        key=lambda p: int(os.path.splitext(os.path.basename(p))[0]))
-        assert len(files) == 10, f"s{i} 下应有 10 张 PGM，实际 {len(files)}"
         for f in files:
             img = np.asarray(Image.open(f), dtype=np.float64) / 255.0
-            assert img.shape == (IMG_H, IMG_W), f"尺寸异常 {f}: {img.shape}"
             X.append(img.ravel()); y.append(i - 1)
     X, y = np.asarray(X), np.asarray(y, dtype=np.int64)
-    assert X.shape == (N_CLASSES * 10, N_FEATURES), f"总数异常: {X.shape}"
     return X, y
 
-# ---------------- 固定训练/测试划分（与 knn_split.py 完全一致） ----------------
 def make_split(y, train_per_class=TRAIN_PER_CLASS):
-    """每类按文件序（1.pgm..10.pgm）前 train_per_class 张训练，其余测试。
-    读取顺序确定 → 划分确定可复现；cnn.py 与 knn_split.py 共用同一逻辑。"""
     tr, te = [], []
     for c in range(N_CLASSES):
         idx = np.where(y == c)[0]
@@ -78,18 +47,8 @@ def make_split(y, train_per_class=TRAIN_PER_CLASS):
         te += idx[train_per_class:].tolist()
     return np.asarray(tr, dtype=np.int64), np.asarray(te, dtype=np.int64)
 
-def sync_split(tr_idx, te_idx, path=SPLIT_FILE):
-    """与 knn_split.py 互校验：文件存在则核对一致，不存在则写出。"""
-    if os.path.exists(path):
-        z = np.load(path)
-        assert np.array_equal(z["train_idx"], tr_idx) and np.array_equal(z["test_idx"], te_idx), \
-            f"{path} 与当前划分不一致！请删除后重跑"
-    else:
-        np.savez(path, train_idx=tr_idx, test_idx=te_idx)
 
-# ---------------- 数据增强：四方向旋转 ----------------
 def rotate_images(X, angle):
-    """X:(n,10304) → 每张 112×92 逆时针旋转 angle°（双线性，空缺填 0）→ (n,10304)"""
     out = np.empty_like(X)
     for i in range(len(X)):
         img = Image.fromarray((X[i].reshape(IMG_H, IMG_W) * 255.0).round().astype(np.uint8))
@@ -98,7 +57,6 @@ def rotate_images(X, angle):
     return out
 
 def build_augmented_train(X_train, y_train, angles=ROT_ANGLES):
-    """原始 + 四个方向旋转副本 → 5 倍增强训练集（“新数据集”）"""
     Xs, ys = [X_train], [y_train]
     for a in angles:
         Xs.append(rotate_images(X_train, a)); ys.append(y_train)
@@ -106,7 +64,6 @@ def build_augmented_train(X_train, y_train, angles=ROT_ANGLES):
     print(f"[增强] 训练集 {X_train.shape[0]} → {X_aug.shape[0]} 张（旋转角 {angles}）")
     return X_aug, y_aug
 
-# ---------------- PyTorch 数据集 / CNN 模型 ----------------
 class FaceDataset(Dataset):
     def __init__(self, X, y, mean, std):
         self.X = (X.reshape(-1, 1, IMG_H, IMG_W).astype(np.float32) - mean) / std
@@ -116,7 +73,6 @@ class FaceDataset(Dataset):
         return torch.from_numpy(self.X[i]), self.y[i]
 
 class ORLCNN(nn.Module):
-    """轻量 CNN：4 组 Conv-BN-ReLU(-Pool)，输入 1×112×92（小样本下不易过拟合）"""
     def __init__(self, n_classes=N_CLASSES, p_drop=0.5):
         super().__init__()
         self.features = nn.Sequential(
@@ -140,7 +96,6 @@ def set_seed(seed=SEED):
         torch.cuda.manual_seed_all(seed)
 
 def train_cnn(model, loader, epochs, lr, tag):
-    """训练过程：Adam + 余弦退火 + 标签平滑 + 权重衰减"""
     model.train()
     opt = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=WEIGHT_DECAY)
     sch = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=epochs)
@@ -167,7 +122,6 @@ def cnn_predict(model, X, mean, std, batch=256):
                     batch_size=batch, shuffle=False)
     return np.concatenate([model(xb.to(DEVICE)).argmax(1).cpu().numpy() for xb, _ in dl])
 
-# ============ 以下 kNN / 指标函数从 knn-weka.py 原样复制（保证逐位一致） ============
 def pairwise_sqdist_ab(A, B):
     sa = np.einsum("ij,ij->i", A, A)
     sb = np.einsum("ij,ij->i", B, B)
@@ -180,7 +134,7 @@ def majority_vote(neighbor_idx, y, k, n_classes=N_CLASSES):
     labels = y[neighbor_idx[:, :k]]
     flat = labels + np.arange(n)[:, None] * n_classes
     counts = np.bincount(flat.ravel(), minlength=n * n_classes).reshape(n, n_classes)
-    return counts.argmax(axis=1).astype(np.int64)   # 平票取最小标签（与 Weka 一致）
+    return counts.argmax(axis=1).astype(np.int64)   
 
 def confusion(y_true, y_pred, n_classes=N_CLASSES):
     cm = np.zeros((n_classes, n_classes), np.int64)
@@ -203,7 +157,7 @@ def nmi_from_cm(cm, average="arithmetic"):
 def cen_from_cm(cm, modified=False):
     C = np.asarray(cm, dtype=np.float64); N = C.shape[0]; S = C.sum()
     D = C.sum(1) + C.sum(0)
-    base = 2.0 * (N - 1)                  # 40 类时底数为 78
+    base = 2.0 * (N - 1)                  
     if not modified:
         Dj, w = D, D / (2.0 * S)
     else:
@@ -222,7 +176,6 @@ def cen_from_cm(cm, modified=False):
     return float(total)
 
 def knn_predict(X_train, y_train, X_test, k_list=K_LIST, n_classes=N_CLASSES):
-    """kNN：测试集→训练集最近邻 + 多数投票（与 knn-weka.py 同一算法/投票规则）"""
     nb = np.argsort(pairwise_sqdist_ab(X_test, X_train), axis=1, kind="stable")[:, :max(k_list)]
     return {k: majority_vote(nb, y_train, k, n_classes) for k in k_list}
 
@@ -231,9 +184,7 @@ def evaluate_preds(y_true, y_pred, n_classes=N_CLASSES):
     return float(np.trace(cm) / cm.sum()), nmi_from_cm(cm), \
            nmi_from_cm(cm, "geometric"), cen_from_cm(cm), cm
 
-# ====== ② 替换原主程序段（从 def parse_args() 开始到文件末尾） ======
 class Tee:
-    """同时输出到控制台与日志文件"""
     def __init__(self, *streams):
         self.streams = streams
     def write(self, obj):
@@ -255,15 +206,13 @@ def parse_args():
     return ap.parse_args()
 
 def run_once(seed, args):
-    """完整跑一遍实验，返回本 seed 的 results 与 robust 结果"""
     set_seed(seed)
     print("\n" + "=" * 78)
     print(f"  RUN  seed = {seed}")
     print("=" * 78)
 
     X, y = load_data(DATA_DIR)
-    tr_idx, te_idx = make_split(y)
-    sync_split(tr_idx, te_idx)          # 划分与 seed 无关 → 三个 seed 共用同一份，npz 校验必通过
+    tr_idx, te_idx = make_split(y)          
     X_tr, y_tr, X_te, y_te = X[tr_idx], y[tr_idx], X[te_idx], y[te_idx]
     print(f"Loaded ORL: X={X.shape}, device={DEVICE}; "
           f"train={len(tr_idx)}/test={len(te_idx)}")
@@ -285,7 +234,6 @@ def run_once(seed, args):
     torch.save(cnn_orig.state_dict(), f"cnn_orig_s{seed}.pt")
     results.append(("CNN-orig", "-", acc, na, ng, ce))
 
-    # ---- 2) 四方向旋转增强 ----
     print(f"\n----- [seed={seed}] 2) 数据增强（旋转 {args.angles}）-----")
     X_aug, y_aug = build_augmented_train(X_tr, y_tr, tuple(args.angles))
     cnn_aug = ORLCNN().to(DEVICE)
@@ -298,7 +246,6 @@ def run_once(seed, args):
     torch.save(cnn_aug.state_dict(), f"cnn_aug_s{seed}.pt")
     results.append(("CNN-aug(增强5x)", "-", acc, na, ng, ce))
 
-    # ---- 3) kNN（确定性算法，三个 seed 结果必然相同）----
     if not args.no_knn:
         print(f"\n----- [seed={seed}] 3) kNN 对比 -----")
         for tag, Xtr_, ytr_ in (("kNN-orig", X_tr, y_tr), ("kNN-aug", X_aug, y_aug)):
@@ -310,7 +257,6 @@ def run_once(seed, args):
                     knn_orig_acc[k] = a
                     print(f"kNN-orig  k={k:<3d} ACC={a:.4f}  NMI={na:.4f}  CEN={ce:.4f}")
 
-    # ---- 4) 鲁棒性 ----
     if not args.no_robust:
         print(f"\n----- [seed={seed}] 4) 鲁棒性（旋转测试集）-----")
         best_k = max(knn_orig_acc, key=knn_orig_acc.get) if knn_orig_acc else None
@@ -329,7 +275,6 @@ def run_once(seed, args):
     return results, robust
 
 def summarize(all_results, all_robust, seeds):
-    """跨 seed 汇总 mean±std，打印并导出 CSV"""
     from collections import defaultdict
     groups = defaultdict(list)
     for results in all_results:
@@ -383,8 +328,8 @@ def summarize(all_results, all_robust, seeds):
 
 if __name__ == "__main__":
     args = parse_args()
-    log_f = open(args.log, "w", encoding="utf-8")   # 想保留历史改成 "a"
-    sys.stdout = Tee(sys.__stdout__, log_f)         # 之后所有 print 同时进 cnn.log
+    log_f = open(args.log, "w", encoding="utf-8")   
+    sys.stdout = Tee(sys.__stdout__, log_f)         
 
     all_results, all_robust = [], []
     for s in args.seeds:
