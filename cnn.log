@@ -1,0 +1,193 @@
+
+==============================================================================
+  RUN  seed = 1
+==============================================================================
+Loaded ORL: X=(400, 10304), device=cpu; train=200/test=200
+
+----- [seed=1] 1) CNN-orig 训练 → 原数据集测试 -----
+[CNN-orig(s1)] epoch   1/80  loss=3.7623  train_acc=0.0350
+[CNN-orig(s1)] epoch  10/80  loss=1.5837  train_acc=0.7500
+[CNN-orig(s1)] epoch  20/80  loss=1.0869  train_acc=0.9750
+[CNN-orig(s1)] epoch  30/80  loss=0.9602  train_acc=0.9900
+[CNN-orig(s1)] epoch  40/80  loss=0.9253  train_acc=0.9900
+[CNN-orig(s1)] epoch  50/80  loss=0.8776  train_acc=0.9950
+[CNN-orig(s1)] epoch  60/80  loss=0.8761  train_acc=1.0000
+[CNN-orig(s1)] epoch  70/80  loss=0.8639  train_acc=1.0000
+[CNN-orig(s1)] epoch  80/80  loss=0.8677  train_acc=1.0000
+[CNN-orig → 原始测试集] ACC=0.9800  NMI=0.9859  CEN=0.0105
+
+----- [seed=1] 2) 数据增强（旋转 [45, 135, 225, 315]）-----
+[增强] 训练集 200 → 1000 张（旋转角 (45, 135, 225, 315)）
+[CNN-aug(s1)] epoch   1/200  loss=3.5730  train_acc=0.0550
+[CNN-aug(s1)] epoch  10/200  loss=1.6390  train_acc=0.7210
+[CNN-aug(s1)] epoch  20/200  loss=1.2776  train_acc=0.8980
+[CNN-aug(s1)] epoch  30/200  loss=1.1519  train_acc=0.9450
+[CNN-aug(s1)] epoch  40/200  loss=1.0636  train_acc=0.9800
+[CNN-aug(s1)] epoch  50/200  loss=1.0581  train_acc=0.9720
+[CNN-aug(s1)] epoch  60/200  loss=1.0197  train_acc=0.9770
+[CNN-aug(s1)] epoch  70/200  loss=1.0029  train_acc=0.9800
+[CNN-aug(s1)] epoch  80/200  loss=0.9643  train_acc=0.9900
+[CNN-aug(s1)] epoch  90/200  loss=0.9558  train_acc=0.9910
+[CNN-aug(s1)] epoch 100/200  loss=0.9239  train_acc=0.9970
+[CNN-aug(s1)] epoch 110/200  loss=0.9199  train_acc=0.9910
+[CNN-aug(s1)] epoch 120/200  loss=0.9130  train_acc=0.9960
+[CNN-aug(s1)] epoch 130/200  loss=0.8971  train_acc=0.9970
+[CNN-aug(s1)] epoch 140/200  loss=0.8810  train_acc=0.9970
+[CNN-aug(s1)] epoch 150/200  loss=0.8851  train_acc=0.9980
+[CNN-aug(s1)] epoch 160/200  loss=0.8666  train_acc=0.9970
+[CNN-aug(s1)] epoch 170/200  loss=0.8611  train_acc=1.0000
+[CNN-aug(s1)] epoch 180/200  loss=0.8695  train_acc=0.9990
+[CNN-aug(s1)] epoch 190/200  loss=0.8601  train_acc=1.0000
+[CNN-aug(s1)] epoch 200/200  loss=0.8590  train_acc=1.0000
+[CNN-aug → 原始测试集] ACC=0.9750  NMI=0.9906  CEN=0.0064
+
+----- [seed=1] 3) kNN 对比 -----
+kNN-orig  k=5   ACC=0.7500  NMI=0.8665  CEN=0.1057
+kNN-orig  k=7   ACC=0.7050  NMI=0.8401  CEN=0.1223
+kNN-orig  k=9   ACC=0.6500  NMI=0.8204  CEN=0.1349
+kNN-orig  k=11  ACC=0.6400  NMI=0.8097  CEN=0.1401
+kNN-orig  k=13  ACC=0.6100  NMI=0.7987  CEN=0.1534
+
+----- [seed=1] 4) 鲁棒性（旋转测试集）-----
+原始(0°)     CNN-orig=0.9800  CNN-aug=0.9750  kNN(k=5)=0.7500
+左上(45°)    CNN-orig=0.1750  CNN-aug=0.9750  kNN(k=5)=0.1150
+左下(135°)   CNN-orig=0.0500  CNN-aug=0.9600  kNN(k=5)=0.0550
+右下(225°)   CNN-orig=0.0600  CNN-aug=0.9650  kNN(k=5)=0.0450
+右上(315°)   CNN-orig=0.1250  CNN-aug=0.9600  kNN(k=5)=0.0550
+
+==============================================================================
+  RUN  seed = 2
+==============================================================================
+Loaded ORL: X=(400, 10304), device=cpu; train=200/test=200
+
+----- [seed=2] 1) CNN-orig 训练 → 原数据集测试 -----
+[CNN-orig(s2)] epoch   1/80  loss=3.7747  train_acc=0.0450
+[CNN-orig(s2)] epoch  10/80  loss=1.4776  train_acc=0.8050
+[CNN-orig(s2)] epoch  20/80  loss=1.0595  train_acc=0.9650
+[CNN-orig(s2)] epoch  30/80  loss=0.9953  train_acc=0.9850
+[CNN-orig(s2)] epoch  40/80  loss=0.9356  train_acc=0.9850
+[CNN-orig(s2)] epoch  50/80  loss=0.8883  train_acc=0.9850
+[CNN-orig(s2)] epoch  60/80  loss=0.8574  train_acc=1.0000
+[CNN-orig(s2)] epoch  70/80  loss=0.8701  train_acc=1.0000
+[CNN-orig(s2)] epoch  80/80  loss=0.8348  train_acc=1.0000
+[CNN-orig → 原始测试集] ACC=0.9800  NMI=0.9861  CEN=0.0104
+
+----- [seed=2] 2) 数据增强（旋转 [45, 135, 225, 315]）-----
+[增强] 训练集 200 → 1000 张（旋转角 (45, 135, 225, 315)）
+[CNN-aug(s2)] epoch   1/200  loss=3.6306  train_acc=0.0540
+[CNN-aug(s2)] epoch  10/200  loss=1.8255  train_acc=0.6220
+[CNN-aug(s2)] epoch  20/200  loss=1.4695  train_acc=0.8060
+[CNN-aug(s2)] epoch  30/200  loss=1.2850  train_acc=0.8890
+[CNN-aug(s2)] epoch  40/200  loss=1.1449  train_acc=0.9470
+[CNN-aug(s2)] epoch  50/200  loss=1.1305  train_acc=0.9530
+[CNN-aug(s2)] epoch  60/200  loss=1.1534  train_acc=0.9480
+[CNN-aug(s2)] epoch  70/200  loss=1.0582  train_acc=0.9770
+[CNN-aug(s2)] epoch  80/200  loss=1.0199  train_acc=0.9760
+[CNN-aug(s2)] epoch  90/200  loss=0.9994  train_acc=0.9870
+[CNN-aug(s2)] epoch 100/200  loss=0.9884  train_acc=0.9910
+[CNN-aug(s2)] epoch 110/200  loss=0.9847  train_acc=0.9840
+[CNN-aug(s2)] epoch 120/200  loss=0.9569  train_acc=0.9880
+[CNN-aug(s2)] epoch 130/200  loss=0.9347  train_acc=0.9960
+[CNN-aug(s2)] epoch 140/200  loss=0.9332  train_acc=0.9950
+[CNN-aug(s2)] epoch 150/200  loss=0.9218  train_acc=0.9950
+[CNN-aug(s2)] epoch 160/200  loss=0.9153  train_acc=0.9930
+[CNN-aug(s2)] epoch 170/200  loss=0.8946  train_acc=0.9980
+[CNN-aug(s2)] epoch 180/200  loss=0.9079  train_acc=0.9950
+[CNN-aug(s2)] epoch 190/200  loss=0.8967  train_acc=1.0000
+[CNN-aug(s2)] epoch 200/200  loss=0.9150  train_acc=0.9990
+[CNN-aug → 原始测试集] ACC=0.9700  NMI=0.9815  CEN=0.0138
+
+----- [seed=2] 3) kNN 对比 -----
+kNN-orig  k=5   ACC=0.7500  NMI=0.8665  CEN=0.1057
+kNN-orig  k=7   ACC=0.7050  NMI=0.8401  CEN=0.1223
+kNN-orig  k=9   ACC=0.6500  NMI=0.8204  CEN=0.1349
+kNN-orig  k=11  ACC=0.6400  NMI=0.8097  CEN=0.1401
+kNN-orig  k=13  ACC=0.6100  NMI=0.7987  CEN=0.1534
+
+----- [seed=2] 4) 鲁棒性（旋转测试集）-----
+原始(0°)     CNN-orig=0.9800  CNN-aug=0.9700  kNN(k=5)=0.7500
+左上(45°)    CNN-orig=0.0800  CNN-aug=0.9450  kNN(k=5)=0.1150
+左下(135°)   CNN-orig=0.0550  CNN-aug=0.9400  kNN(k=5)=0.0550
+右下(225°)   CNN-orig=0.0300  CNN-aug=0.9500  kNN(k=5)=0.0450
+右上(315°)   CNN-orig=0.1350  CNN-aug=0.9600  kNN(k=5)=0.0550
+
+==============================================================================
+  RUN  seed = 3
+==============================================================================
+Loaded ORL: X=(400, 10304), device=cpu; train=200/test=200
+
+----- [seed=3] 1) CNN-orig 训练 → 原数据集测试 -----
+[CNN-orig(s3)] epoch   1/80  loss=3.7970  train_acc=0.0250
+[CNN-orig(s3)] epoch  10/80  loss=1.5270  train_acc=0.7900
+[CNN-orig(s3)] epoch  20/80  loss=1.1097  train_acc=0.9700
+[CNN-orig(s3)] epoch  30/80  loss=0.9949  train_acc=0.9850
+[CNN-orig(s3)] epoch  40/80  loss=0.9147  train_acc=0.9950
+[CNN-orig(s3)] epoch  50/80  loss=0.8801  train_acc=1.0000
+[CNN-orig(s3)] epoch  60/80  loss=0.8708  train_acc=1.0000
+[CNN-orig(s3)] epoch  70/80  loss=0.8552  train_acc=0.9950
+[CNN-orig(s3)] epoch  80/80  loss=0.8631  train_acc=1.0000
+[CNN-orig → 原始测试集] ACC=0.9950  NMI=0.9965  CEN=0.0026
+
+----- [seed=3] 2) 数据增强（旋转 [45, 135, 225, 315]）-----
+[增强] 训练集 200 → 1000 张（旋转角 (45, 135, 225, 315)）
+[CNN-aug(s3)] epoch   1/200  loss=3.5893  train_acc=0.0620
+[CNN-aug(s3)] epoch  10/200  loss=1.7980  train_acc=0.6440
+[CNN-aug(s3)] epoch  20/200  loss=1.4064  train_acc=0.8260
+[CNN-aug(s3)] epoch  30/200  loss=1.2778  train_acc=0.8890
+[CNN-aug(s3)] epoch  40/200  loss=1.2076  train_acc=0.9150
+[CNN-aug(s3)] epoch  50/200  loss=1.1051  train_acc=0.9510
+[CNN-aug(s3)] epoch  60/200  loss=1.0746  train_acc=0.9640
+[CNN-aug(s3)] epoch  70/200  loss=1.0380  train_acc=0.9680
+[CNN-aug(s3)] epoch  80/200  loss=1.0302  train_acc=0.9730
+[CNN-aug(s3)] epoch  90/200  loss=0.9924  train_acc=0.9820
+[CNN-aug(s3)] epoch 100/200  loss=0.9625  train_acc=0.9930
+[CNN-aug(s3)] epoch 110/200  loss=0.9652  train_acc=0.9890
+[CNN-aug(s3)] epoch 120/200  loss=0.9420  train_acc=0.9940
+[CNN-aug(s3)] epoch 130/200  loss=0.9163  train_acc=0.9970
+[CNN-aug(s3)] epoch 140/200  loss=0.9095  train_acc=0.9950
+[CNN-aug(s3)] epoch 150/200  loss=0.8963  train_acc=0.9980
+[CNN-aug(s3)] epoch 160/200  loss=0.8931  train_acc=0.9980
+[CNN-aug(s3)] epoch 170/200  loss=0.8973  train_acc=0.9990
+[CNN-aug(s3)] epoch 180/200  loss=0.8889  train_acc=0.9990
+[CNN-aug(s3)] epoch 190/200  loss=0.8888  train_acc=0.9970
+[CNN-aug(s3)] epoch 200/200  loss=0.8866  train_acc=0.9960
+[CNN-aug → 原始测试集] ACC=0.9600  NMI=0.9815  CEN=0.0137
+
+----- [seed=3] 3) kNN 对比 -----
+kNN-orig  k=5   ACC=0.7500  NMI=0.8665  CEN=0.1057
+kNN-orig  k=7   ACC=0.7050  NMI=0.8401  CEN=0.1223
+kNN-orig  k=9   ACC=0.6500  NMI=0.8204  CEN=0.1349
+kNN-orig  k=11  ACC=0.6400  NMI=0.8097  CEN=0.1401
+kNN-orig  k=13  ACC=0.6100  NMI=0.7987  CEN=0.1534
+
+----- [seed=3] 4) 鲁棒性（旋转测试集）-----
+原始(0°)     CNN-orig=0.9950  CNN-aug=0.9600  kNN(k=5)=0.7500
+左上(45°)    CNN-orig=0.0850  CNN-aug=0.9500  kNN(k=5)=0.1150
+左下(135°)   CNN-orig=0.0450  CNN-aug=0.9650  kNN(k=5)=0.0550
+右下(225°)   CNN-orig=0.0150  CNN-aug=0.9550  kNN(k=5)=0.0450
+右上(315°)   CNN-orig=0.1250  CNN-aug=0.9550  kNN(k=5)=0.0550
+
+==============================================================================
+跨 seed 汇总（seeds=[1, 2, 3]，mean±std）
+==============================================================================
+方法                   k               ACC               NMI               CEN
+CNN-orig             -  0.9850±0.0087   0.9895±0.0061   0.0079±0.0045
+CNN-aug(增强5x)        -  0.9683±0.0076   0.9845±0.0052   0.0113±0.0042
+kNN-orig             5  0.7500±0.0000   0.8665±0.0000   0.1057±0.0000
+kNN-orig             7  0.7050±0.0000   0.8401±0.0000   0.1223±0.0000
+kNN-orig             9  0.6500±0.0000   0.8204±0.0000   0.1349±0.0000
+kNN-orig            11  0.6400±0.0000   0.8097±0.0000   0.1401±0.0000
+kNN-orig            13  0.6100±0.0000   0.7987±0.0000   0.1534±0.0000
+kNN-aug              5  0.7500±0.0000   0.8665±0.0000   0.1057±0.0000
+kNN-aug              7  0.7050±0.0000   0.8401±0.0000   0.1223±0.0000
+kNN-aug              9  0.6500±0.0000   0.8204±0.0000   0.1349±0.0000
+kNN-aug             11  0.6400±0.0000   0.8097±0.0000   0.1401±0.0000
+kNN-aug             13  0.6100±0.0000   0.7987±0.0000   0.1534±0.0000
+
+鲁棒性 mean±std：
+测试集                   CNN-orig           CNN-aug             kNN最佳
+原始(0°)           0.9850±0.0087     0.9683±0.0076     0.7500±0.0000
+左上(45°)          0.1133±0.0535     0.9567±0.0161     0.1150±0.0000
+左下(135°)         0.0500±0.0050     0.9550±0.0132     0.0550±0.0000
+右下(225°)         0.0350±0.0229     0.9567±0.0076     0.0450±0.0000
+右上(315°)         0.1283±0.0058     0.9583±0.0029     0.0550±0.0000

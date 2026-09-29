@@ -1,0 +1,4 @@
+# Treat image files as binary
+*.pgm binary
+*.jpg binary
+*.png binary
