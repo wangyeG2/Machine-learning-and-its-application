@@ -216,7 +216,6 @@ def write_csv(rows, name="orl_results.csv"):
         alt = f"orl_results_{time.strftime('%Y%m%d_%H%M%S')}.csv"
         with open(alt, "w", newline="", encoding="utf-8") as f:
             csv.writer(f).writerows(rows)
-        print(f"⚠ {name} 被占用（多半开着 Excel），已改存为 {alt}")
 
 # ---------- 主程序 ----------
 if __name__ == "__main__":
@@ -230,8 +229,8 @@ if __name__ == "__main__":
 
     X, y = load_data(DATA_DIR)
     print(f"Loaded ORL: X={X.shape}, y classes={np.unique(y).size}")
-    verify(X, y)                       # 朴素版自检
-    to_arff(X, y)                      # 生成 orl.arff 给 Weka
+    verify(X, y)                       
+    to_arff(X, y)                     
 
     folds = list(StratifiedKFold(n_splits=N_SPLITS, shuffle=True,
                                  random_state=SEED).split(X, y))
